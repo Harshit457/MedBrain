@@ -12,18 +12,18 @@ function Navigation() {
             to="/"
             className="text-xl font-bold text-gray-800 dark:text-white"
           >
-            MedRecord
+            MedBrain
           </Link>
           <div className="flex items-center space-x-4">
-            <Link
-              to="/"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
-            >
-              Home
-            </Link>
-
+            
             {authUser && (
-              <div>
+                    <div className="flex gap-4">
+                      <Link
+                        to="/"
+                        className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                      >
+                       Home
+                          </Link>
                 <Link
                   to="/profile"
                   className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"

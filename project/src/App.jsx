@@ -17,6 +17,8 @@ import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import { Toaster } from "react-hot-toast";
 import { useThemeStore } from "./store/useThemeStore";
+import LandingPage from "./pages/LandingPages";
+
 function App() {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
   const { theme } = useThemeStore();
@@ -43,9 +45,10 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={authUser ? <Home /> : <Navigate to="/login" />}
+              element={authUser ? <Home /> : <Navigate to="/getstarted" />}
             />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/getstarted" element={!authUser? <LandingPage />: <Navigate to={"/"}/>} />
             <Route
               path="/signup"
               element={!authUser ? <SignUpPage /> : <Navigate to="/" />}

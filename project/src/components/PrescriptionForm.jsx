@@ -1,173 +1,279 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from "react";
+import { axiosInstance } from "../lib/axios";
+import toast from "react-hot-toast";
+import { useRef } from "react";
 function PrescriptionForm({ onClose }) {
   const [formData, setFormData] = useState({
-    doctorName: '',
-    hospitalName: '',
-    medicineCount: '1',
-    medicines: [{ name: '', dosage: '', duration: '' }],
-    prescriptionFile: null
+    doctorName: "",
+    hospitalName: "",
+    medicines: [{ name: "", dosage: "", timing: "" }],
+    
+    location: { lat: "", lng: "" },
+    date: "",
   });
-
-  const handleMedicineCountChange = (e) => {
-    const count = parseInt(e.target.value);
-    setFormData(prev => ({
-      ...prev,
-      medicineCount: e.target.value,
-      medicines: Array(count).fill().map((_, i) => 
-        prev.medicines[i] || { name: '', dosage: '', duration: '' }
-      )
-    }));
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData((prev) => ({
+            ...prev,
+            location: {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          }));
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Could not fetch location. Please enable location services.");
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+  }, []);
+  
+  const removeImage = () => {
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleMedicineChange = (index, field, value) => {
     const newMedicines = [...formData.medicines];
     newMedicines[index] = { ...newMedicines[index], [field]: value };
-    setFormData(prev => ({ ...prev, medicines: newMedicines }));
+    setFormData((prev) => ({ ...prev, medicines: newMedicines }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission here
-    console.log(formData);
-    onClose();
+  const handleAddMedicine = () => {
+    setFormData((prev) => ({
+      ...prev,
+      medicines: [...prev.medicines, { name: "", dosage: "", timing: "" }],
+    }));
   };
+
+  const handleRemoveMedicine = (index) => {
+    const newMedicines = formData.medicines.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, medicines: newMedicines }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+  
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result); // Store base64 string in state
+    };
+    reader.readAsDataURL(file); // Convert image to base64 string
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    const { doctorName, hospitalName, medicines, location, date } = formData;
+  
+    // Validate fields
+    if (
+      !doctorName ||
+      !hospitalName ||
+      !date ||
+      !location.lat ||
+      !location.lng ||
+      medicines.some((med) => !med.name || !med.dosage || !med.timing)
+    ) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+  
+    try {
+      const formDataPayload = new FormData();
+      formDataPayload.append("doctorName", doctorName);
+      formDataPayload.append("hospitalName", hospitalName);
+      formDataPayload.append("date", new Date(date).toISOString());
+      formDataPayload.append("location", JSON.stringify(location)); // Send as JSON string
+      formDataPayload.append("medicines", JSON.stringify(medicines)); // Send as JSON string
+  
+      if (imagePreview) {
+        formDataPayload.append("documentUpload", imagePreview); // Add base64 string
+      }
+  
+      const response = await axiosInstance.post("/auth/prescriptions", formDataPayload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+  
+      alert("Prescription created successfully.");
+      onClose();
+    } catch (error) {
+      console.error("Error creating prescription:", error);
+      alert("Failed to create prescription.");
+    }
+  };
+  
+  
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 animate-slideIn">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 p-6 bg-base-100 shadow-lg rounded-lg relative"
+    >
+      {/* Close Button */}
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+        aria-label="Close"
+      >
+        ✕
+      </button>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Doctor Name
-        </label>
+        <label className="block text-sm font-medium">Doctor Name</label>
         <input
           type="text"
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                     focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 
-                     dark:border-gray-600 dark:text-white"
+          className="input input-bordered w-full mt-2"
           value={formData.doctorName}
-          onChange={(e) => setFormData(prev => ({ ...prev, doctorName: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, doctorName: e.target.value }))
+          }
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Hospital Name
-        </label>
+        <label className="block text-sm font-medium">Hospital Name</label>
         <input
           type="text"
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                     focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 
-                     dark:border-gray-600 dark:text-white"
+          className="input input-bordered w-full mt-2"
           value={formData.hospitalName}
-          onChange={(e) => setFormData(prev => ({ ...prev, hospitalName: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, hospitalName: e.target.value }))
+          }
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Number of Medicines
-        </label>
-        <select
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                     focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 
-                     dark:border-gray-600 dark:text-white"
-          value={formData.medicineCount}
-          onChange={handleMedicineCountChange}
-        >
-          {[1, 2, 3, 4, 5].map(num => (
-            <option key={num} value={num}>{num}</option>
-          ))}
-        </select>
-      </div>
-
-      {formData.medicines.map((medicine, index) => (
-        <div key={index} className="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <h4 className="font-medium text-gray-700 dark:text-gray-300">Medicine {index + 1}</h4>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Name
-              </label>
-              <input
-                type="text"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                           focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 
-                           dark:border-gray-600 dark:text-white"
-                value={medicine.name}
-                onChange={(e) => handleMedicineChange(index, 'name', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Dosage
-              </label>
-              <input
-                type="text"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                           focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 
-                           dark:border-gray-600 dark:text-white"
-                value={medicine.dosage}
-                onChange={(e) => handleMedicineChange(index, 'dosage', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Duration
-              </label>
-              <input
-                type="text"
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                           focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 
-                           dark:border-gray-600 dark:text-white"
-                value={medicine.duration}
-                onChange={(e) => handleMedicineChange(index, 'duration', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      ))}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Upload Prescription (PDF or Image)
-        </label>
+        <label className="block text-sm font-medium">Date</label>
         <input
-          type="file"
-          accept=".pdf,.png,.jpg,.jpeg"
-          className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400
-                     file:mr-4 file:py-2 file:px-4
-                     file:rounded-md file:border-0
-                     file:text-sm file:font-semibold
-                     file:bg-blue-50 file:text-blue-700
-                     hover:file:bg-blue-100
-                     dark:file:bg-gray-700 dark:file:text-gray-300"
-          onChange={(e) => setFormData(prev => ({ ...prev, prescriptionFile: e.target.files[0] }))}
+          type="date"
+          required
+          className="input input-bordered w-full mt-2"
+          value={formData.date}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, date: e.target.value }))
+          }
         />
       </div>
 
-      <div className="flex justify-end space-x-4">
+      <div>
+        <label className="block text-sm font-medium">Location</label>
+        <div className="grid grid-cols-2 gap-4 mt-2">
+          <input
+            type="text"
+            placeholder="Latitude"
+            value={formData.location.lat}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                location: { ...prev.location, lat: e.target.value },
+              }))
+            }
+            className="input input-bordered"
+          />
+          <input
+            type="text"
+            placeholder="Longitude"
+            value={formData.location.lng}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                location: { ...prev.location, lng: e.target.value },
+              }))
+            }
+            className="input input-bordered"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium">Medicines</label>
+        {formData.medicines.map((medicine, index) => (
+          <div key={index} className="mt-4 space-y-2">
+            <div className="grid grid-cols-3 gap-4">
+              <input
+                type="text"
+                required
+                className="input input-bordered"
+                placeholder="Medicine Name"
+                value={medicine.name}
+                onChange={(e) =>
+                  handleMedicineChange(index, "name", e.target.value)
+                }
+              />
+              <input
+                type="text"
+                required
+                className="input input-bordered"
+                placeholder="Dosage"
+                value={medicine.dosage}
+                onChange={(e) =>
+                  handleMedicineChange(index, "dosage", e.target.value)
+                }
+              />
+              <input
+                type="text"
+                required
+                className="input input-bordered"
+                placeholder="Duration"
+                value={medicine.timing}
+                onChange={(e) =>
+                  handleMedicineChange(index, "timing", e.target.value)
+                }
+              />
+            </div>
+            {formData.medicines.length > 1 && (
+              <button
+                type="button"
+                onClick={() => handleRemoveMedicine(index)}
+                className="btn btn-error btn-sm"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        ))}
         <button
           type="button"
-          onClick={onClose}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 
-                     rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 
-                     dark:hover:bg-gray-600"
+          onClick={handleAddMedicine}
+          className="btn btn-primary btn-sm mt-4"
         >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 
-                     rounded-md hover:bg-blue-700 transition-colors duration-200"
-        >
-          Submit
+          Add Medicine
         </button>
       </div>
+
+      <div>
+        <label className="block text-sm font-medium">
+          Prescription File (optional)
+        </label>
+        <input
+            type="file"
+            accept="image/*"
+            className="w-full"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
+      </div>
+
+      <button type="submit" className="btn btn-primary w-full">
+        Create Prescription
+      </button>
     </form>
   );
 }
