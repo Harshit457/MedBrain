@@ -1,11 +1,13 @@
 import React from "react";
+import SettingsPage from "./pages/SettingsPage";
+import { ChatBot } from "./pages/RealChatBot";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-
+import QuizComponent from "./pages/ChatBot";
 import { Loader } from "lucide-react";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
@@ -18,7 +20,7 @@ import LoginPage from "./pages/LoginPage";
 import { Toaster } from "react-hot-toast";
 import { useThemeStore } from "./store/useThemeStore";
 import LandingPage from "./pages/LandingPages";
-
+import ImageUploadComponent from "./pages/Diagnos";
 function App() {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
   const { theme } = useThemeStore();
@@ -48,7 +50,10 @@ function App() {
               element={authUser ? <Home /> : <Navigate to="/getstarted" />}
             />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/getstarted" element={!authUser? <LandingPage />: <Navigate to={"/"}/>} />
+            <Route
+              path="/getstarted"
+              element={!authUser ? <LandingPage /> : <Navigate to={"/"} />}
+            />
             <Route
               path="/signup"
               element={!authUser ? <SignUpPage /> : <Navigate to="/" />}
@@ -60,6 +65,16 @@ function App() {
             <Route
               path="/profile"
               element={authUser ? <Profile /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/diagnos"
+              element={authUser ? <ImageUploadComponent /> : <Navigate to="/login" />}
+            />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/bot" element={authUser ? <ChatBot /> : <Navigate to="/login" />} />
+            <Route
+              path="/quiz"
+              element={authUser ? <QuizComponent /> : <Navigate to="/login" />}
             />
             <Route
               path="/prescription/:id"

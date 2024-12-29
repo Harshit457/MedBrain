@@ -1,24 +1,30 @@
 import React, { useState } from "react";
 import RecordCard from "../components/RecordCard";
 import NewPrescriptionModal from "../components/NewPrescriptionModal";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleChatClick = () => {
-    console.log("Chatbot opened!");
+    navigate("/bot");
+  };
+
+  const handleQuickCheckupClick = () => {
+    navigate("/quiz");
   };
 
   return (
     <div className="container mx-auto px-6 py-8 relative">
       {/* Header Section */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white animate-fadeIn">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white animate-fadeIn text-center sm:text-left">
           Medical Records
         </h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="btn btn-primary btn-md transform hover:scale-105"
+          className="btn btn-primary btn-md transform hover:scale-105 mt-4 sm:mt-0"
         >
           Generate New Prescription
         </button>
@@ -37,9 +43,30 @@ function Home() {
         onClose={() => setIsModalOpen(false)}
       />
 
-      {/* Chatbot Icon with Hover Effect */}
-      <div className="fixed bottom-5 right-5 group">
-        {/* Main Chatbot Icon */}
+      {/* Fixed Action Buttons */}
+      <div className="fixed bottom-5 right-5 flex flex-col gap-4 group">
+        {/* Quick Checkup Button */}
+        <div
+          onClick={handleQuickCheckupClick}
+          className="bg-green-500 text-white rounded-full p-4 shadow-lg cursor-pointer transition-transform transform hover:scale-110 relative"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="30"
+            height="30"
+            fill="currentColor"
+          >
+            <path d="M20 12c0-4.418-3.582-8-8-8S4 7.582 4 12s3.582 8 8 8 8-3.582 8-8zm-10 0a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm4.828-6.828A2 2 0 0 1 16 8.172a6.978 6.978 0 0 0-4-1.172c-.813 0-1.6.147-2.328.414A2 2 0 1 1 8 5.414 8.978 8.978 0 0 1 12 4c1.854 0 3.637.507 5.172 1.414A2 2 0 1 1 16 7.828z"></path>
+          </svg>
+        </div>
+
+        {/* Tooltip for Quick Checkup */}
+        <div className="hidden group-hover:flex absolute -top-14 right-0 bg-gray-800 text-white py-1 px-3 rounded-lg shadow-lg transform transition-opacity opacity-0 group-hover:opacity-100">
+          <span className="text-sm font-medium">Quick Checkup</span>
+        </div>
+
+        {/* Chatbot Button */}
         <div
           onClick={handleChatClick}
           className="bg-blue-500 text-white rounded-full p-4 shadow-lg cursor-pointer transition-transform transform hover:scale-110"
@@ -55,7 +82,7 @@ function Home() {
           </svg>
         </div>
 
-        {/* Tooltip */}
+        {/* Tooltip for Chatbot */}
         <div className="hidden group-hover:flex absolute -top-14 right-0 bg-gray-800 text-white py-1 px-3 rounded-lg shadow-lg transform transition-opacity opacity-0 group-hover:opacity-100">
           <span className="text-sm font-medium">Chatbot</span>
         </div>

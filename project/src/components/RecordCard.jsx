@@ -89,41 +89,45 @@ function RecordCard() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {records.map((record) => {
-        const { doctorName, hospitalName, date, _id, documentUpload } = record;
-
-        return (
-          <div
-            key={_id}
-            onClick={() => navigate(`/prescription/${_id}`)}
-            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer dark:text-white animate-fadeIn"
-          >
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-              {doctorName}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
-              {hospitalName}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-              Last modified: {new Date(date).toLocaleDateString()}
-            </p>
-            <div className="mt-4">
-              {documentUpload && documentUpload.length > 0 && (
-                <a
-                  href={documentUpload[0]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline"
-                >
-                  View Prescription Document
-                </a>
-              )}
+      {records
+        .slice() // Create a copy of the records array to avoid mutating the original array
+        .reverse()
+        .map((record) => {
+          const { doctorName, hospitalName, date, _id, documentUpload } = record;
+  
+          return (
+            <div
+              key={_id}
+              onClick={() => navigate(`/prescription/${_id}`)}
+              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer dark:text-white animate-fadeIn"
+            >
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+                Doctor: {doctorName}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
+                Hospital: {hospitalName}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                On date: {new Date(date).toLocaleDateString()}
+              </p>
+              <div className="mt-4">
+                {documentUpload && documentUpload.length > 0 && (
+                  <a
+                    href={documentUpload[0]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
+                    View Prescription Document
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
     </div>
   );
+  
 }
 
 export default RecordCard;
