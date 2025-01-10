@@ -9,7 +9,7 @@ export const generateToken = (userId, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true, // Prevent JavaScript access
     sameSite: "lax", // Allow cookies across subdomains and origins
-    secure: process.env.NODE_ENV === "production", // Only HTTPS in production
+    secure: false, // Only HTTPS in production
   });
   
 
