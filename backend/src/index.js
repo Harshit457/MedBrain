@@ -24,7 +24,9 @@ app.use(
     credentials: true,
   })
 );
-
+app.unsubscribe((req,res,next)=>{
+  res.setHeader('Access-Control-Allow-Credentials','true');
+})
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/auth", presRoutes);
